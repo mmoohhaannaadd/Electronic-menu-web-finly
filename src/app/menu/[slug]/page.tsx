@@ -11,6 +11,8 @@ type Restaurant = {
     slug: string;
     whatsapp_number: string;
     logo_url: string | null;
+    cover_url: string | null;
+    subtitle: string | null;
     theme_color: string;
     currency: string;
 };
@@ -169,18 +171,18 @@ export default function PublicMenuPage({ params }: { params: Promise<{ slug: str
             <header className="relative h-56 w-full overflow-hidden sm:h-72">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
                 <div className="h-full w-full bg-cover bg-center"
-                    style={{ backgroundImage: `url(https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop)` }} />
+                    style={{ backgroundImage: `url(${restaurant.cover_url || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop"})` }} />
                 <div className="absolute bottom-0 left-0 right-0 z-20 flex items-end gap-4 p-5">
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border-2 border-white/80 bg-white soft-shadow sm:h-20 sm:w-20">
                         {restaurant.logo_url ? (
-                            <img src={restaurant.logo_url} alt="logo" className="h-full w-full object-cover" />
+                            <img src={restaurant.logo_url} alt="logo" className="h-full w-full object-cover" crossOrigin="anonymous" />
                         ) : (
                             <div className="flex h-full w-full items-center justify-center text-3xl">🍽️</div>
                         )}
                     </div>
                     <div className="mb-1 text-white">
                         <h1 className="text-2xl font-bold sm:text-3xl">{restaurant.name}</h1>
-                        <p className="mt-0.5 text-sm opacity-80">اطلب الآن عبر واتساب ⚡</p>
+                        <p className="mt-0.5 text-sm opacity-90">{restaurant.subtitle || "اطلب الآن عبر واتساب ⚡"}</p>
                     </div>
                 </div>
             </header>
@@ -326,6 +328,8 @@ export default function PublicMenuPage({ params }: { params: Promise<{ slug: str
                 items={cartItems}
                 totalPrice={totalPrice}
                 restaurantName={restaurant.name}
+                restaurantLogo={restaurant.logo_url}
+                restaurantSubtitle={restaurant.subtitle}
                 restaurantWhatsApp={restaurant.whatsapp_number}
                 onUpdateQuantity={updateCartItemQuantity}
             />

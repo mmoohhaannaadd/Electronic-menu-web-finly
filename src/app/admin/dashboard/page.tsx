@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { QRCodeCanvas } from "qrcode.react";
 
 // ===================== TYPES =====================
 type Restaurant = {
@@ -12,6 +13,8 @@ type Restaurant = {
     slug: string;
     whatsapp_number: string;
     logo_url: string | null;
+    cover_url: string | null;
+    subtitle: string | null;
     theme_color: string;
     currency: string;
 };
@@ -90,7 +93,7 @@ export default function AdminDashboard() {
     const [userEmail, setUserEmail] = useState("");
 
     // Settings
-    const [settingsForm, setSettingsForm] = useState({ name: "", slug: "", whatsapp_number: "", theme_color: "#f97316", currency: "₪" });
+    const [settingsForm, setSettingsForm] = useState({ name: "", slug: "", whatsapp_number: "", theme_color: "#f97316", currency: "₪", logo_url: "", cover_url: "", subtitle: "" });
     const [settingsSaving, setSettingsSaving] = useState(false);
     const [settingsMsg, setSettingsMsg] = useState("");
 
@@ -128,7 +131,7 @@ export default function AdminDashboard() {
         if (!rest) { router.push("/admin/setup"); return; }
 
         setRestaurant(rest);
-        setSettingsForm({ name: rest.name, slug: rest.slug, whatsapp_number: rest.whatsapp_number, theme_color: rest.theme_color, currency: rest.currency ?? "₪" });
+        setSettingsForm({ name: rest.name, slug: rest.slug, whatsapp_number: rest.whatsapp_number, theme_color: rest.theme_color, currency: rest.currency ?? "₪", logo_url: rest.logo_url ?? "", cover_url: rest.cover_url ?? "", subtitle: rest.subtitle ?? "" });
 
         const { data: cats } = await supabase.from("categories").select("*").eq("restaurant_id", rest.id).order("sort_order");
         setCategories(cats ?? []);
@@ -149,6 +152,19 @@ export default function AdminDashboard() {
     };
 
     // ===================== SETTINGS =====================
+    const handleSettingsImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "logo_url" | "cover_url") => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setSettingsSaving(true);
+        const ext = file.name.split(".").pop();
+        const fileName = `restaurant-${field}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { data, error } = await supabase.storage.from("menu-images").upload(fileName, file, { upsert: true });
+        if (error) { alert("فشل رفع الصورة: " + error.message); setSettingsSaving(false); return; }
+        const { data: urlData } = supabase.storage.from("menu-images").getPublicUrl(data.path);
+        setSettingsForm(p => ({ ...p, [field]: urlData.publicUrl }));
+        setSettingsSaving(false);
+    };
+
     const handleSaveSettings = async () => {
         if (!restaurant) return;
         setSettingsSaving(true);
@@ -159,10 +175,25 @@ export default function AdminDashboard() {
             whatsapp_number: settingsForm.whatsapp_number,
             theme_color: settingsForm.theme_color,
             currency: settingsForm.currency,
+            logo_url: settingsForm.logo_url || null,
+            cover_url: settingsForm.cover_url || null,
+            subtitle: settingsForm.subtitle || null,
         }).eq("id", restaurant.id);
         setSettingsSaving(false);
         if (error) setSettingsMsg("❌ " + error.message);
         else { setSettingsMsg("✅ تم الحفظ بنجاح!"); loadData(); }
+    };
+
+    const downloadQRCode = () => {
+        const canvas = document.getElementById("qr-gen") as HTMLCanvasElement;
+        if (!canvas) return;
+        const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        let downloadLink = document.createElement("a");
+        downloadLink.href = pngUrl;
+        downloadLink.download = `QR_${settingsForm.name}.png`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
     };
 
     // ===================== CATEGORIES =====================
@@ -557,6 +588,58 @@ export default function AdminDashboard() {
                                 <p className="mt-1 text-xs text-muted">رمز الدولة بدون + (مثال: 972 لفلسطين/إسرائيل)</p>
                             </div>
 
+                            {/* Logo */}
+                            <div>
+                                <label className="block text-sm font-bold text-muted">لوجو المطعم</label>
+                                <div className="mt-1 flex items-center gap-4">
+                                    {(settingsForm.logo_url) ? (
+                                        <div className="relative h-16 w-16 shrink-0 rounded-xl overflow-hidden border border-border">
+                                            <img src={settingsForm.logo_url} className="h-full w-full object-cover" alt="Logo" />
+                                            <button onClick={() => setSettingsForm(p => ({ ...p, logo_url: "" }))} className="absolute inset-0 bg-black/50 text-white flex justify-center items-center opacity-0 hover:opacity-100 transition-opacity">
+                                                <Icon path="M6 18L18 6M6 6l12 12" className="h-5 w-5" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="h-16 w-16 shrink-0 rounded-xl border-2 border-dashed border-border flex items-center justify-center text-muted">🍽️</div>
+                                    )}
+                                    <div className="flex-1">
+                                        <input type="file" accept="image/*" onChange={e => handleSettingsImageUpload(e, "logo_url")} className="hidden" id="logo-upload" />
+                                        <label htmlFor="logo-upload" className="cursor-pointer inline-flex items-center justify-center rounded-xl bg-background border border-border px-4 py-2 text-sm font-bold transition hover:border-primary">
+                                            {settingsSaving && !settingsForm.logo_url ? "جاري الرفع..." : "تغيير اللوجو"}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Cover */}
+                            <div>
+                                <label className="block text-sm font-bold text-muted">صورة الغلاف</label>
+                                <div className="mt-1 flex flex-col gap-3">
+                                    {(settingsForm.cover_url) && (
+                                        <div className="relative h-32 w-full rounded-xl overflow-hidden border border-border">
+                                            <img src={settingsForm.cover_url} className="h-full w-full object-cover" alt="Cover" />
+                                            <button onClick={() => setSettingsForm(p => ({ ...p, cover_url: "" }))} className="absolute inset-0 bg-black/50 text-white flex justify-center items-center opacity-0 hover:opacity-100 transition-opacity">
+                                                <Icon path="M6 18L18 6M6 6l12 12" className="h-6 w-6" />
+                                            </button>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <input type="file" accept="image/*" onChange={e => handleSettingsImageUpload(e, "cover_url")} className="hidden" id="cover-upload" />
+                                        <label htmlFor="cover-upload" className="cursor-pointer inline-flex items-center justify-center rounded-xl bg-background border border-border px-4 py-2 text-sm font-bold transition hover:border-primary w-full shadow-sm">
+                                            {settingsSaving && !settingsForm.cover_url ? "جاري الرفع..." : "رفع صورة غلاف جديدة"}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Subtitle */}
+                            <div>
+                                <label className="block text-sm font-bold text-muted">النص الفرعي (يظهر أسفل الاسم)</label>
+                                <input value={settingsForm.subtitle} onChange={e => setSettingsForm(p => ({ ...p, subtitle: e.target.value }))}
+                                    placeholder="مثال: أفضل برجر في المدينة 🍔"
+                                    className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                            </div>
+
                             {/* Currency */}
                             <div>
                                 <label className="block text-sm font-bold text-muted">عملة المطعم</label>
@@ -587,6 +670,35 @@ export default function AdminDashboard() {
                                 className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white transition hover:bg-primary/90 disabled:opacity-50">
                                 {settingsSaving ? "جاري الحفظ..." : "حفظ الإعدادات"}
                             </button>
+
+                            {/* QR CODE Section */}
+                            <div className="border-t border-border pt-6 mt-4">
+                                <h3 className="text-lg font-bold">باركود المنيو (QR Code)</h3>
+                                <p className="text-sm text-muted mb-4">اطبع هذا الباركود وضعه على طاولات المطعم ليصل الزبائن للمنيو فوراً.</p>
+                                <div className="flex flex-col sm:flex-row items-center gap-6 rounded-2xl bg-background p-6 border border-border shadow-sm">
+                                    <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex-shrink-0">
+                                        <QRCodeCanvas
+                                            id="qr-gen"
+                                            value={`${typeof window !== "undefined" ? window.location.origin : ""}/menu/${settingsForm.slug}`}
+                                            size={160}
+                                            level={"H"}
+                                            includeMargin={false}
+                                            fgColor={settingsForm.theme_color}
+                                        />
+                                    </div>
+                                    <div className="flex-1 space-y-4 text-center sm:text-right w-full min-w-0">
+                                        <div>
+                                            <p className="font-bold">رابط المنيو الحالي:</p>
+                                            <div className="mt-1 text-sm text-primary font-mono bg-primary/5 px-3 py-2 rounded-lg break-all text-left" dir="ltr">
+                                                {typeof window !== "undefined" ? window.location.origin : ""}/menu/{settingsForm.slug}
+                                            </div>
+                                        </div>
+                                        <button onClick={downloadQRCode} className="w-full sm:w-auto inline-flex justify-center rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white transition hover:bg-primary/90">
+                                            حفظ الباركود كصورة ⬇️
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

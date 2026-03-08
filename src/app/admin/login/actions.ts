@@ -36,15 +36,15 @@ export async function signup(formData: FormData) {
     });
 
     if (error) {
-        return redirect(`/admin/login?error=${error.message}`);
+        return redirect(`/admin/login?error=${encodeURIComponent(error.message)}`);
     }
 
     if (data?.user?.identities?.length === 0) {
-        return redirect(`/admin/login?error=البريد الإلكتروني مسجل مسبقاً`);
+        return redirect(`/admin/login?error=${encodeURIComponent('البريد الإلكتروني مسجل مسبقاً')}`);
     }
 
     if (data?.user && !data.session) {
-        return redirect(`/admin/login?message=تم إنشاء الحساب! يرجى مراجعة بريدك الإلكتروني لتفعيل الحساب.`);
+        return redirect(`/admin/login?message=${encodeURIComponent('تم إنشاء الحساب! يرجى مراجعة بريدك الإلكتروني لتفعيل الحساب.')}`);
     }
 
     revalidatePath("/", "layout");

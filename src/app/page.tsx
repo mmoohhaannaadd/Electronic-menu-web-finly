@@ -38,7 +38,7 @@ export default function Home() {
               <QrCode className="h-6 w-6" />
             </div>
             <span className="text-2xl font-black tracking-tight flex items-center gap-1">
-              منيو <span className="text-primary">طيارة</span>
+              menu<span className="text-primary">Up</span>
             </span>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
@@ -171,7 +171,7 @@ export default function Home() {
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="flex items-center gap-2 font-black text-foreground text-xl">
               <QrCode className="h-6 w-6 text-primary" />
-              منيو <span className="text-primary">طيارة</span>
+              menu<span className="text-primary">Up</span>
             </div>
             <p className="text-sm font-medium">جميع الحقوق محفوظة &copy; {new Date().getFullYear()} - تم الصنع في 🌍 للجميع.</p>
           </div>

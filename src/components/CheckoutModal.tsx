@@ -18,6 +18,8 @@ interface CheckoutModalProps {
     totalPrice: number;
     restaurantWhatsApp: string;
     restaurantName: string;
+    restaurantLogo?: string | null;
+    restaurantSubtitle?: string | null;
     onUpdateQuantity: (id: string | number, delta: number) => void;
 }
 
@@ -28,6 +30,8 @@ export function CheckoutModal({
     totalPrice,
     restaurantWhatsApp,
     restaurantName,
+    restaurantLogo,
+    restaurantSubtitle,
     onUpdateQuantity,
 }: CheckoutModalProps) {
     const handleWhatsAppOrder = (e: React.FormEvent<HTMLFormElement>) => {
@@ -37,7 +41,6 @@ export function CheckoutModal({
         const notes = formData.get("notes") as string;
         const tableOrAddress = formData.get("tableOrAddress") as string;
 
-        // Build the WhatsApp message
         let message = `مرحباً ${restaurantName} 👋\n\n`;
         message += `*تفاصيل الطلب:*\n`;
 
@@ -48,7 +51,7 @@ export function CheckoutModal({
         message += `\n*الإجمالي:* ${totalPrice.toFixed(2)} ₪\n`;
 
         message += `\n*الاسم:* ${customerName}`;
-        if (tableOrAddress) message += `\n*الطاولة/العنوان:* ${tableOrAddress}`;
+        if (tableOrAddress) message += `\n*العنوان:* ${tableOrAddress}`;
         if (notes) message += `\n*ملاحظات:* ${notes}`;
 
         const encodedMessage = encodeURIComponent(message);
@@ -72,16 +75,17 @@ export function CheckoutModal({
             const canvas = await html2canvas(receiptElement, {
                 scale: 2, // Higher resolution
                 useCORS: true,
+                allowTaint: false,
                 backgroundColor: "#ffffff",
                 logging: false,
-                windowWidth: receiptElement.scrollWidth,
-                windowHeight: receiptElement.scrollHeight,
             });
             const image = canvas.toDataURL("image/jpeg", 0.9);
             const link = document.createElement("a");
             link.href = image;
             link.download = `فاتورة_${restaurantName}_${new Date().getTime()}.jpg`;
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
         } catch (error) {
             console.error("Failed to generate receipt image", error);
             alert("عذراً، حدث خطأ أثناء محاولة حفظ الفاتورة. يرجى المحاولة مرة أخرى.");
@@ -125,17 +129,21 @@ export function CheckoutModal({
 
                             <div className="overflow-y-auto p-4 sm:p-6">
                                 {/* Order Summary targeted for receipt download */}
-                                <div className="mb-6 rounded-2xl bg-white p-5 border border-gray-100 shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                                    <div id="receipt-capture" className="bg-[#1a1a1a] text-white p-4 rounded-xl print-dark" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>
-                                        <div className="text-center mb-4 border-b border-gray-700 pb-4">
-                                            <h3 className="font-bold text-lg text-primary">{restaurantName}</h3>
-                                            <p className="text-xs text-gray-400 mb-1">فاتورة طلب</p>
+                                <div className="mb-6 rounded-3xl bg-white p-5 border border-border shadow-sm print-container print:shadow-none">
+                                    <div id="receipt-capture" className="bg-white text-black p-6 rounded-3xl" style={{ backgroundColor: '#ffffff', color: '#000000', direction: 'rtl' }}>
+                                        <div className="text-center mb-6 border-b-2 border-dashed border-gray-200 pb-6">
+                                            {restaurantLogo && (
+                                                <img src={restaurantLogo} alt="Logo" className="mx-auto h-20 w-20 rounded-2xl object-cover mb-4 shadow-sm border border-gray-100" crossOrigin="anonymous" />
+                                            )}
+                                            <h3 className="font-extrabold text-2xl" style={{ color: '#111827' }}>{restaurantName}</h3>
+                                            {restaurantSubtitle && <p className="text-sm font-medium mt-1" style={{ color: '#6b7280' }}>{restaurantSubtitle}</p>}
+                                            <div className="mt-4 inline-block bg-gray-100 px-4 py-1.5 rounded-full text-xs font-bold" style={{ color: '#4b5563' }}>فاتورة طلب إلكترونية</div>
                                         </div>
-                                        <h4 className="mb-3 font-bold text-gray-300 text-sm px-1">ملخص الطلب</h4>
+                                        <h4 className="mb-4 font-bold text-sm px-1" style={{ color: '#374151' }}>ملخص الطلبات</h4>
                                         <div className="space-y-4 px-1">
                                             {items.map((item) => (
-                                                <div key={item.id} className="flex flex-col gap-2 border-b border-gray-700 pb-3 last:border-0 last:pb-0">
-                                                    <div className="flex justify-between font-medium text-white">
+                                                <div key={item.id} className="flex flex-col gap-2 border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                                                    <div className="flex justify-between font-bold text-lg" style={{ color: '#1f2937' }}>
                                                         <span>{item.title}</span>
                                                         <span>{item.price * item.quantity} ₪</span>
                                                     </div>
@@ -159,9 +167,12 @@ export function CheckoutModal({
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="mt-4 flex justify-between border-t border-gray-700 pt-4 px-1 text-lg font-bold text-primary">
-                                            <span className="text-white">الإجمالي</span>
-                                            <span>{totalPrice.toFixed(2)} ₪</span>
+                                        <div className="mt-6 flex justify-between border-t-2 border-dashed border-gray-200 pt-5 px-1 text-xl font-black">
+                                            <span style={{ color: '#111827' }}>الإجمالي المستحق</span>
+                                            <span style={{ color: '#111827' }}>{totalPrice.toFixed(2)} ₪</span>
+                                        </div>
+                                        <div className="mt-6 text-center text-xs font-medium" style={{ color: '#9ca3af' }}>
+                                            نشكركم لاختياركم {restaurantName} - أُنشئت بواسطة <strong>menuUp</strong>
                                         </div>
                                     </div>
                                 </div>
@@ -183,13 +194,13 @@ export function CheckoutModal({
                                     </div>
                                     <div>
                                         <label htmlFor="tableOrAddress" className="mb-1 block text-sm font-bold text-muted">
-                                            رقم الطاولة أو العنوان (اختياري)
+                                            العنوان (اختياري)
                                         </label>
                                         <input
                                             type="text"
                                             id="tableOrAddress"
                                             name="tableOrAddress"
-                                            placeholder="مثال: طاولة 4، أو شارع النيل"
+                                            placeholder="مثال: شارع الجامعة، عمارة 5"
                                             className="w-full rounded-xl border border-border bg-transparent px-4 py-3 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                         />
                                     </div>
