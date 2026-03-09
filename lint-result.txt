@@ -1,6 +1,9 @@
 ﻿
+> menu-app@0.1.0 lint
+> eslint
+
+
 D:\Antigravity projects\menuo elc\menu 1\src\app\admin\dashboard\page.tsx
-  191:13  error    'downloadLink' is never reassigned. Use 'const' instead                                                                                                                                                                                                                                  prefer-const
   511:65  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
   597:45  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
   620:45  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
@@ -13,6 +16,5 @@ D:\Antigravity projects\menuo elc\menu 1\src\app\menu\[slug]\page.tsx
 D:\Antigravity projects\menuo elc\menu 1\src\components\CheckoutModal.tsx
   136:49  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
-ظ£û 8 problems (1 error, 7 warnings)
-  1 error and 0 warnings potentially fixable with the `--fix` option.
+ظ£û 7 problems (0 errors, 7 warnings)
 

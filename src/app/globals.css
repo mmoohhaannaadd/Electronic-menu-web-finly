@@ -59,3 +59,216 @@ body {
 .hover-shadow:hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
 }
+
+/* Auth Page Styles */
+.auth-bg {
+  background: #0a0e1a;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(249, 115, 22, 0.05) 0%, transparent 50%);
+}
+
+.auth-panel {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(249, 115, 22, 0.1);
+}
+
+.auth-side-panel {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border-left: 1px solid rgba(249, 115, 22, 0.15);
+}
+
+.auth-input {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #F9FAFB;
+  transition: all 0.3s ease;
+}
+
+.auth-input:focus {
+  border-color: #F97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  background: rgba(15, 23, 42, 0.8);
+  outline: none;
+}
+
+.auth-input::placeholder {
+  color: rgba(156, 163, 175, 0.6);
+}
+
+.auth-input:hover:not(:focus) {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* OTP Input Styles */
+.otp-input {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: rgba(15, 23, 42, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #F9FAFB;
+  transition: all 0.2s ease;
+  caret-color: #F97316;
+}
+
+.otp-input:focus {
+  border-color: #F97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+  outline: none;
+}
+
+.otp-input.filled {
+  border-color: #F97316;
+  background: rgba(249, 115, 22, 0.08);
+}
+
+/* Password Strength Meter */
+.strength-bar {
+  height: 4px;
+  border-radius: 2px;
+  transition: all 0.4s ease;
+}
+
+.strength-weak {
+  background: linear-gradient(90deg, #EF4444, #EF4444);
+  width: 33%;
+}
+
+.strength-medium {
+  background: linear-gradient(90deg, #F59E0B, #EAB308);
+  width: 66%;
+}
+
+.strength-strong {
+  background: linear-gradient(90deg, #22C55E, #16A34A);
+  width: 100%;
+}
+
+/* Social Button Styles */
+.social-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #F9FAFB;
+  transition: all 0.2s ease;
+}
+
+.social-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Auth Button */
+.auth-submit-btn {
+  background: linear-gradient(135deg, #F97316, #EA580C);
+  color: white;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-submit-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.auth-submit-btn:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.auth-submit-btn:hover:not(:disabled) {
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.35);
+  transform: translateY(-1px);
+}
+
+.auth-submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.auth-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+/* Tab Indicator */
+.tab-indicator {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Security Badge */
+.security-badge {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  color: #4ADE80;
+}
+
+/* Custom Checkbox */
+.auth-checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.auth-checkbox:checked {
+  background: #F97316;
+  border-color: #F97316;
+}
+
+.auth-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Error message animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+    max-height: 0;
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 40px;
+  }
+}
+
+.error-msg {
+  animation: slideDown 0.3s ease forwards;
+}

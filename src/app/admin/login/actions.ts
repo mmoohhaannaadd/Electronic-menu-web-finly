@@ -10,13 +10,20 @@ export async function login(formData: FormData) {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
+    if (!email || !password) {
+        return redirect("/admin/login?error=" + encodeURIComponent("يرجى ملء جميع الحقول"));
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
     });
 
     if (error) {
-        return redirect("/admin/login?error=Invalid login credentials");
+        const msg = error.message === "Invalid login credentials"
+            ? "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+            : error.message;
+        return redirect("/admin/login?error=" + encodeURIComponent(msg));
     }
 
     revalidatePath("/", "layout");
@@ -28,11 +35,25 @@ export async function signup(formData: FormData) {
 
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+    const firstName = formData.get("firstName") as string || "";
+    const lastName = formData.get("lastName") as string || "";
+    const phone = formData.get("phone") as string || "";
 
-    // Sign up the user
+    if (!email || !password) {
+        return redirect("/admin/login?error=" + encodeURIComponent("يرجى ملء جميع الحقول المطلوبة"));
+    }
+
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+            data: {
+                first_name: firstName,
+                last_name: lastName,
+                full_name: `${firstName} ${lastName}`.trim(),
+                phone: phone,
+            },
+        },
     });
 
     if (error) {
