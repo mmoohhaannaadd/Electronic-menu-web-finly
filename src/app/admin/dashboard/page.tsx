@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { QRCodeCanvas } from "qrcode.react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 // ===================== TYPES =====================
 type Restaurant = {
@@ -210,6 +211,36 @@ export default function AdminDashboard() {
         if (!confirm("حذف هذا التصنيف وجميع منتجاته؟")) return;
         await supabase.from("categories").delete().eq("id", id);
         loadData();
+    };
+
+    const handleDragEnd = async (result: DropResult) => {
+        if (!result.destination || !restaurant) return;
+        
+        const items = Array.from(categories);
+        const [reorderedItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0, reorderedItem);
+
+        // Update the state immediately for smooth UI
+        const updatedCategories = items.map((cat, index) => ({
+            ...cat,
+            sort_order: index
+        }));
+        setCategories(updatedCategories);
+
+        // Update in the database
+        const updates = updatedCategories.map((cat) => ({
+            id: cat.id,
+            name: cat.name,
+            restaurant_id: restaurant.id,
+            sort_order: cat.sort_order
+        }));
+        
+        const { error } = await supabase.from('categories').upsert(updates);
+        if (error) {
+            console.error("Error updating category order:", error);
+            alert("حدث خطأ أثناء حفظ الترتيب الجديد");
+            loadData(); // Revert back to server state on error
+        }
     };
 
     // ===================== IMAGE UPLOAD =====================
@@ -452,23 +483,48 @@ export default function AdminDashboard() {
                                 <p className="mt-3 font-bold">لا يوجد تصنيفات</p>
                             </div>
                         ) : (
-                            <div className="space-y-3">
-                                {categories.map(cat => (
-                                    <div key={cat.id} className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4 soft-shadow">
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold">{cat.name[0]}</div>
-                                            <div>
-                                                <p className="font-bold">{cat.name}</p>
-                                                <p className="text-xs text-muted">{items.filter(i => i.category_id === cat.id).length} منتج</p>
-                                            </div>
+                            <DragDropContext onDragEnd={handleDragEnd}>
+                                <Droppable droppableId="categories">
+                                    {(provided) => (
+                                        <div className="space-y-3" {...provided.droppableProps} ref={provided.innerRef}>
+                                            {categories.map((cat, index) => (
+                                                <Draggable key={cat.id} draggableId={cat.id} index={index}>
+                                                    {(provided, snapshot) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            style={{
+                                                                ...provided.draggableProps.style,
+                                                                opacity: snapshot.isDragging ? 0.8 : 1
+                                                            }}
+                                                            className={`flex items-center justify-between rounded-2xl border border-border bg-surface p-4 soft-shadow ${snapshot.isDragging ? 'shadow-lg border-primary' : ''}`}
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div 
+                                                                    {...provided.dragHandleProps}
+                                                                    className="cursor-move text-muted hover:text-primary transition p-1"
+                                                                >
+                                                                    <Icon path="M4 8h16M4 16h16" className="h-5 w-5" />
+                                                                </div>
+                                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold">{cat.name[0]}</div>
+                                                                <div>
+                                                                    <p className="font-bold">{cat.name}</p>
+                                                                    <p className="text-xs text-muted">{items.filter(i => i.category_id === cat.id).length} منتج</p>
+                                                                </div>
+                                                            </div>
+                                                            <button onClick={() => handleDeleteCategory(cat.id)}
+                                                                className="rounded-lg p-2 text-muted transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20">
+                                                                <Icon path="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
                                         </div>
-                                        <button onClick={() => handleDeleteCategory(cat.id)}
-                                            className="rounded-lg p-2 text-muted transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20">
-                                            <Icon path="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
                         )}
                     </div>
                 )}
