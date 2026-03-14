@@ -71,3 +71,23 @@ export async function signup(formData: FormData) {
     revalidatePath("/", "layout");
     redirect("/admin/dashboard");
 }
+
+export async function resetPassword(formData: FormData) {
+    const supabase = await createClient();
+    const email = formData.get("email") as string;
+
+    if (!email) {
+        return redirect(`/admin/login?error=${encodeURIComponent('يرجى إدخال البريد الإلكتروني')}`);
+    }
+
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${origin}/admin/login`,
+    });
+
+    if (error) {
+        return redirect(`/admin/login?error=${encodeURIComponent(error.message)}`);
+    }
+
+    return redirect(`/admin/login?message=${encodeURIComponent('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني')}`);
+}
