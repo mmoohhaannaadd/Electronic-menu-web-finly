@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { login, signup } from "./actions";
+import { login, signup, resetPassword } from "./actions";
 import { Suspense, useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -219,7 +219,7 @@ function OTPSection({ onBack }: { onBack: () => void }) {
 }
 
 // ─── Login Form ─────────────────────────────────────────────────────
-function LoginForm({ serverError }: { serverError: string | null }) {
+function LoginForm({ serverError, serverMessage }: { serverError: string | null; serverMessage: string | null }) {
     const [showPassword, setShowPassword] = useState(false);
     const [showOtp, setShowOtp] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -227,6 +227,9 @@ function LoginForm({ serverError }: { serverError: string | null }) {
     const [passwordError, setPasswordError] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
+    const [resetEmail, setResetEmail] = useState("");
+    const [resetLoading, setResetLoading] = useState(false);
 
     const validate = useCallback(() => {
         let valid = true;
@@ -251,10 +254,79 @@ function LoginForm({ serverError }: { serverError: string | null }) {
         }
     };
 
+    const handleResetPassword = async (formData: FormData) => {
+        setResetLoading(true);
+        try {
+            await resetPassword(formData);
+        } catch {
+            setResetLoading(false);
+        }
+    };
+
     return (
         <AnimatePresence mode="wait">
             {showOtp ? (
                 <OTPSection key="otp" onBack={() => setShowOtp(false)} />
+            ) : showForgotPassword ? (
+                <motion.div
+                    key="forgot"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="space-y-5"
+                >
+                    <div className="text-center">
+                        <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-500/10 flex items-center justify-center mb-4">
+                            <LockIcon />
+                        </div>
+                        <h3 className="text-lg font-bold text-white">استعادة كلمة المرور</h3>
+                        <p className="text-gray-400 text-sm mt-1">أدخل بريدك وسنرسل لك رابط إعادة التعيين</p>
+                    </div>
+
+                    {serverMessage && (
+                        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            className="text-sm font-medium text-green-400 bg-green-500/10 border border-green-500/20 p-3 rounded-xl text-center">
+                            {serverMessage}
+                        </motion.p>
+                    )}
+                    {serverError && (
+                        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            className="text-sm font-medium text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-xl text-center">
+                            {serverError}
+                        </motion.p>
+                    )}
+
+                    <form action={handleResetPassword} className="space-y-4">
+                        <div>
+                            <label htmlFor="reset-email" className="block text-sm font-semibold text-gray-300 mb-1.5">البريد الإلكتروني</label>
+                            <input
+                                id="reset-email"
+                                name="email"
+                                type="email"
+                                required
+                                value={resetEmail}
+                                onChange={e => setResetEmail(e.target.value)}
+                                className="auth-input w-full px-4 py-3 rounded-xl text-sm"
+                                placeholder="example@restaurant.com"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={resetLoading || !resetEmail}
+                            className="auth-submit-btn w-full py-3.5 rounded-xl text-sm flex items-center justify-center gap-2"
+                        >
+                            {resetLoading ? <LoaderIcon /> : "إرسال رابط إعادة التعيين"}
+                        </button>
+                    </form>
+
+                    <button
+                        type="button"
+                        onClick={() => setShowForgotPassword(false)}
+                        className="w-full text-center text-orange-400 hover:text-orange-300 transition-colors text-sm font-medium"
+                    >
+                        ← العودة لتسجيل الدخول
+                    </button>
+                </motion.div>
             ) : (
                 <motion.div
                     key="login"
@@ -338,7 +410,7 @@ function LoginForm({ serverError }: { serverError: string | null }) {
                                 <input type="checkbox" className="auth-checkbox" name="remember" />
                                 <span className="text-gray-400 text-xs">تذكّرني</span>
                             </label>
-                            <button type="button" className="text-orange-400 hover:text-orange-300 transition-colors text-xs font-medium">
+                            <button type="button" onClick={() => setShowForgotPassword(true)} className="text-orange-400 hover:text-orange-300 transition-colors text-xs font-medium">
                                 نسيت كلمة المرور؟
                             </button>
                         </div>
@@ -705,7 +777,7 @@ function AuthContent() {
                                     exit={{ opacity: 0, x: 20 }}
                                     transition={{ duration: 0.3 }}
                                 >
-                                    <LoginForm serverError={error} />
+                                    <LoginForm serverError={error} serverMessage={message} />
                                 </motion.div>
                             ) : (
                                 <motion.div
