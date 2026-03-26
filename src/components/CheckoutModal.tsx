@@ -200,7 +200,7 @@ export function CheckoutModal({
                                             type="text"
                                             id="tableOrAddress"
                                             name="tableOrAddress"
-                                            placeholder="مثال: شارع الجامعة، عمارة 5"
+                                            placeholder="أدخل عنوانك"
                                             className="w-full rounded-xl border border-border bg-transparent px-4 py-3 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                         />
                                     </div>
@@ -212,7 +212,7 @@ export function CheckoutModal({
                                             id="notes"
                                             name="notes"
                                             rows={2}
-                                            placeholder="بدون بصل، اكسترا صوص..."
+                                            placeholder="ادخل ملاحظاتك على الطلب"
                                             className="w-full resize-none rounded-xl border border-border bg-transparent px-4 py-3 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                         />
                                     </div>
